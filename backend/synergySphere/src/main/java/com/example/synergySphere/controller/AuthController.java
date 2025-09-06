@@ -2,9 +2,7 @@ package com.example.synergySphere.controller;
 
 import com.example.synergySphere.dto.AuthRequestDTO;
 import com.example.synergySphere.dto.AuthResponseDTO;
-
 import com.example.synergySphere.service.AuthService;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,13 +15,11 @@ public class AuthController {
 
     @PostMapping("/signup")
     public AuthResponseDTO signup(@RequestBody AuthRequestDTO request) {
-        String message = authService.signup(request.getName(), request.getEmail(), request.getPassword());
-        return new AuthResponseDTO(message);
+        return authService.signup(request.getName(), request.getEmail(), request.getPassword());
     }
 
     @PostMapping("/login")
     public AuthResponseDTO login(@RequestBody AuthRequestDTO request) {
-        String message = authService.login(request.getEmail(), request.getPassword());
-        return new AuthResponseDTO(message);
+        return authService.login(request.getEmail(), request.getPassword());
     }
 }

@@ -1,10 +1,15 @@
 package com.example.synergySphere.service;
 
+import com.example.synergySphere.dto.AuthRequestDTO;
+import com.example.synergySphere.dto.AuthResponseDTO;
 import com.example.synergySphere.model.User;
 import com.example.synergySphere.repository.UserRepository;
+import com.example.synergySphere.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -12,24 +17,28 @@ public class AuthService {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    public String signup(String name, String email, String password) {
+    public AuthResponseDTO signup(String name, String email, String password) {
         if (userRepository.existsByEmail(email)) {
-            return "Email already exists!";
+            return new AuthResponseDTO("Email already exists!", null);
         }
+
         User user = new User(name, email, passwordEncoder.encode(password));
         userRepository.save(user);
-        return "Signup successful!";
+
+        String token = JwtUtil.generateToken(user.getEmail());
+        return new AuthResponseDTO("User registered successfully!", token);
     }
 
-    public String login(String email, String password) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        if (passwordEncoder.matches(password, user.getPassword())) {
-            return "Login successful!";
+    public AuthResponseDTO login(String email, String password) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+
+        if (userOpt.isEmpty() || !passwordEncoder.matches(password, userOpt.get().getPassword())) {
+            return new AuthResponseDTO("Invalid email or password!", null);
         }
-        return "Invalid credentials!";
+
+        String token = JwtUtil.generateToken(email);
+        return new AuthResponseDTO("Login successful!", token);
     }
 }
